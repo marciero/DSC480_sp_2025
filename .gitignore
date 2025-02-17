@@ -20,6 +20,8 @@
 #*.md
 _quarto.yml
 .Rproj.user/
+read_clean.R
+Ibis_MIIA.qmd
 
 ###
 *.html
