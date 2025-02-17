@@ -66,7 +66,7 @@ ibis_term <- events_full %>%
     mutate(days = ibis_coverage_end_date - ibis_coverage_start_date)
 
 ibis_patients_term <- ibis_term %>%
-    select(pid) %>% distinct() %>% mutate(cohort = "Unicare")
+    select(pid, days) %>% distinct() %>% mutate(cohort = "Unicare")
 
 
 ```
@@ -80,7 +80,7 @@ MIIA_term <- events_full %>% filter(str_detect(org_name, "MIIA")) %>%
     mutate(days = ibis_coverage_start_date - coverage_start_date)
 
 MIIA_patients_term <- MIIA_term %>%
-    select(pid) %>% distinct() %>%
+    select(pid, days) %>% distinct() %>%
     mutate(cohort = "MIIA")
 
 ```
@@ -106,7 +106,8 @@ event_list <- c("emergency", "inpatient") ## in case one or more are missing
      mutate(event_type = factor(event_type, levels = event_list)) %>%
     group_by(pid, event_type)  %>%
     summarize(count = n(), .groups = "drop") %>%
-    pivot_wider(names_from = event_type, values_from = count)  %>%
+    pivot_wider(names_from = event_type, values_from = count) %>% 
+     rename(inpatient_admits = inpatient) %>% 
     replace(is.na(.), 0)
 
 ibis_admit_days <- ibis_events %>%
@@ -117,7 +118,7 @@ ibis_events_pre <- ibis_counts %>%
 
 ibis_event_summary <- ibis_patients_term %>% left_join(ibis_events_pre, by = "pid") %>%
     replace(is.na(.), 0) %>%
-    select(pid, emergency, inpatient, inpatient_days)
+    select(pid, emergency, inpatient_admits, inpatient_days)
 
 #########
 ```
@@ -142,6 +143,7 @@ MIIA_counts <- MIIA_events %>%
     group_by(pid, event_type)  %>%
     summarize(count = n(), .groups = "drop") %>%
     pivot_wider(names_from = event_type, values_from = count)  %>%
+     rename(inpatient_admits = inpatient) %>% 
     replace(is.na(.), 0)
 
 MIIA_admit_days <- MIIA_events %>%
@@ -152,7 +154,7 @@ MIIA_events_pre <- MIIA_counts %>%
 
 MIIA_event_summary <- MIIA_patients_term %>% left_join(MIIA_events_pre, by = "pid") %>%
     replace(is.na(.), 0) %>%
-    select(pid, emergency, inpatient, inpatient_days)
+    select(pid, emergency, inpatient_admits, inpatient_days)
 
 
 ```
@@ -172,6 +174,7 @@ events_summary <- bind_rows(ibis_event_summary, MIIA_event_summary) %>%
     inner_join(cohorts, by = "pid") %>% select(-pid)
 
 ```
+
 
 ```{r}
 write_csv(events_summary, "events_summary.csv")
