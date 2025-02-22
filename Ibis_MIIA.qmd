@@ -51,6 +51,7 @@ source("read_clean.R")
 
 ```
 
+
 ```{r}
 
 
@@ -118,7 +119,9 @@ ibis_events_pre <- ibis_counts %>%
 
 ibis_event_summary <- ibis_patients_term %>% left_join(ibis_events_pre, by = "pid") %>%
     replace(is.na(.), 0) %>%
-    select(pid, emergency, inpatient_admits, inpatient_days)
+    select(pid, emergency, inpatient_admits, inpatient_days) %>% 
+    mutate(inpatient = if_else(inpatient_admits == 0, 0, 1))
+
 
 #########
 ```
@@ -154,7 +157,8 @@ MIIA_events_pre <- MIIA_counts %>%
 
 MIIA_event_summary <- MIIA_patients_term %>% left_join(MIIA_events_pre, by = "pid") %>%
     replace(is.na(.), 0) %>%
-    select(pid, emergency, inpatient_admits, inpatient_days)
+    select(pid, emergency, inpatient_admits, inpatient_days) %>% 
+    mutate(inpatient = if_else(inpatient_admits == 0, 0, 1))
 
 
 ```
@@ -170,16 +174,14 @@ MIIA_event_summary <- MIIA_patients_term %>% left_join(MIIA_events_pre, by = "pi
 
 ```{r}
 
-events_summary <- bind_rows(ibis_event_summary, MIIA_event_summary) %>% 
+events_summary <- rbind(ibis_event_summary, MIIA_event_summary) %>% 
     inner_join(cohorts, by = "pid") %>% select(-pid)
 
 ```
 
-
 ```{r}
 write_csv(events_summary, "events_summary.csv")
 ```
-
 
 ```{r}
 patients <- report_full %>% select(pid, age, hcc, c(condition_count:urologic_cancer)) %>% 
